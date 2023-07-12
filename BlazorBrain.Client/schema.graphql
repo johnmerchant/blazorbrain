@@ -1,0 +1,234 @@
+﻿enum ApplyPolicy {
+  BEFORE_RESOLVER
+  AFTER_RESOLVER
+  VALIDATION
+}
+
+type Query {
+  userId: String!
+  conversation(conversationId: UUID!): Conversation!
+  conversations(
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+    where: ConversationFilterInput
+    order: [ConversationSortInput!]
+  ): ConversationsConnection
+}
+
+type Mutation {
+  createConversation: CreateConversationPayload!
+  prompt(input: PromptInput!): PromptPayload!
+  addMessage(input: AddMessageInput!): AddMessagePayload!
+  mapsAccessToken: MapsAccessTokenPayload!
+}
+
+type Subscription {
+  onConversationCreated: Conversation!
+  onConversationUpdated(conversationId: UUID!): Conversation!
+}
+
+input ConversationFilterInput {
+  and: [ConversationFilterInput!]
+  or: [ConversationFilterInput!]
+  id: UuidOperationFilterInput
+  userId: StringOperationFilterInput
+  title: StringOperationFilterInput
+  isStreaming: BooleanOperationFilterInput
+  created: DateTimeOperationFilterInput
+}
+
+input ConversationSortInput {
+  id: SortEnumType
+  userId: SortEnumType
+  title: SortEnumType
+  isStreaming: SortEnumType
+  created: SortEnumType
+}
+
+"""
+A connection to a list of items.
+"""
+type ConversationsConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+
+  """
+  A list of edges.
+  """
+  edges: [ConversationsEdge!]
+
+  """
+  A flattened list of the nodes.
+  """
+  nodes: [Conversation!]
+}
+
+input UuidOperationFilterInput {
+  eq: UUID
+  neq: UUID
+  in: [UUID]
+  nin: [UUID]
+  gt: UUID
+  ngt: UUID
+  gte: UUID
+  ngte: UUID
+  lt: UUID
+  nlt: UUID
+  lte: UUID
+  nlte: UUID
+}
+
+input StringOperationFilterInput {
+  and: [StringOperationFilterInput!]
+  or: [StringOperationFilterInput!]
+  eq: String
+  neq: String
+  contains: String
+  ncontains: String
+  in: [String]
+  nin: [String]
+  startsWith: String
+  nstartsWith: String
+  endsWith: String
+  nendsWith: String
+}
+
+input BooleanOperationFilterInput {
+  eq: Boolean
+  neq: Boolean
+}
+
+input DateTimeOperationFilterInput {
+  eq: DateTime
+  neq: DateTime
+  in: [DateTime]
+  nin: [DateTime]
+  gt: DateTime
+  ngt: DateTime
+  gte: DateTime
+  ngte: DateTime
+  lt: DateTime
+  nlt: DateTime
+  lte: DateTime
+  nlte: DateTime
+}
+
+enum SortEnumType {
+  ASC
+  DESC
+}
+
+"""
+Information about pagination in a connection.
+"""
+type PageInfo {
+  """
+  Indicates whether more edges exist following the set defined by the clients arguments.
+  """
+  hasNextPage: Boolean!
+
+  """
+  Indicates whether more edges exist prior the set defined by the clients arguments.
+  """
+  hasPreviousPage: Boolean!
+
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  startCursor: String
+
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+}
+
+type Conversation {
+  messages: [ConversationMessage!]!
+  id: UUID!
+  userId: String!
+  title: String!
+  isStreaming: Boolean!
+  created: DateTime!
+}
+
+"""
+An edge in a connection.
+"""
+type ConversationsEdge {
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge.
+  """
+  node: Conversation!
+}
+
+scalar UUID
+
+"""
+The `DateTime` scalar represents an ISO-8601 compliant date time type.
+"""
+scalar DateTime
+
+type ConversationMessage {
+  id: UUID!
+  userId: String!
+  content: String!
+  role: ConversationRole!
+  description: String!
+}
+
+enum ConversationRole {
+  USER
+  BOT
+  SYSTEM
+}
+
+type CreateConversationPayload {
+  conversation: Conversation
+}
+
+input PromptInput {
+  conversationId: UUID!
+  message: String!
+}
+
+type PromptPayload {
+  conversation: Conversation
+}
+
+input AddMessageInput {
+  conversationId: UUID!
+  message: String!
+}
+
+type AddMessagePayload {
+  conversation: Conversation
+}
+
+type MapsAccessTokenPayload {
+  string: String
+}

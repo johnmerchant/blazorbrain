@@ -1,0 +1,63 @@
+@page "/Chat/{ConversationId:guid}"
+
+@inject BlazorBrainClient Client
+
+<UseOnConversationUpdated ConversationId="ConversationId" />
+
+<UseGetConversation ConversationId="@ConversationId" Context="conversation" Strategy="ExecutionStrategy.CacheFirst">
+    <ChildContent>
+        <h3>@conversation.Conversation.Title</h3>
+        @for (var i = 0; i < conversation.Conversation.Messages.Count; ++i)
+        {
+            var message = conversation.Conversation.Messages[i];
+            <Message 
+                Index="@i"
+                Content="@message.Content"
+                Role="@message.Role" 
+                IsStreaming="@conversation.Conversation.IsStreaming"
+                ConversationMessageCount="@conversation.Conversation.Messages.Count" />
+        }
+        <Form onsubmit="@SendMessage">
+            <div class="input-group">
+                <input class="form-control" @bind="@Message" placeholder="Message"/>
+                <Button Color="Color.Primary" Disabled="@IsLoading" Clicked="@SendMessage">
+                    Send
+                    <Icon Name="IconName.PaperPlane"></Icon>
+                </Button>
+            </div>
+        </Form>
+    </ChildContent>
+</UseGetConversation>
+
+@code {
+    
+    [Parameter]
+    public Guid ConversationId { get; set; }
+    
+    protected string Message { get; set; } = "";
+    protected bool IsLoading { get; set; }
+
+    protected async Task SendMessage()
+    {
+        if (IsLoading) return;
+
+        var message = Message;
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            IsLoading = true;
+            Message = "";
+            var conversation = await Client.GetConversation.ExecuteAsync(ConversationId, CancellationToken.None);
+            if (conversation.Data?.Conversation.Messages.Count == 0)
+            {
+                await Client.Prompt.ExecuteAsync(ConversationId, message, CancellationToken.None);
+            }
+            else
+            {
+                await Client.AddMessage.ExecuteAsync(ConversationId, message, CancellationToken.None);
+            }
+        }
+        IsLoading = false;
+    }
+
+
+}

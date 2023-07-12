@@ -1,0 +1,13 @@
+fragment ConversationFragment on Conversation {
+    id
+    userId
+    title
+    isStreaming
+    created
+    messages {
+        id
+        content
+        role
+        description
+    }
+}

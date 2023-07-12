@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <UserSecretsId>5a0401d1-c821-46d2-9000-11556e6af9e1</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="HotChocolate.AspNetCore" Version="13.3.1" />
+      <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="13.3.1" />
+      <PackageReference Include="HotChocolate.Subscriptions.Redis" Version="13.3.1" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.8" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="7.0.8" />
+      <PackageReference Include="Microsoft.Identity.Web" Version="2.12.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\BlazorBrain.Api.Types\BlazorBrain.Api.Types.csproj" />
+      <ProjectReference Include="..\BlazorBrain.Infrastructure\BlazorBrain.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

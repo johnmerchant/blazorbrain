@@ -1,0 +1,7 @@
+query GetConversations($search: String) {
+    conversations(first: 20, order: [{ created: DESC }], where: { title: { contains: $search } }) {
+        nodes {
+            ...ConversationFragment
+        }
+    }
+}

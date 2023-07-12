@@ -1,0 +1,7 @@
+mutation Prompt($conversationId: UUID!, $message: String!) {
+    prompt(input: { conversationId: $conversationId, message: $message }) {
+        conversation {
+            ...ConversationFragment
+        }
+    }
+}

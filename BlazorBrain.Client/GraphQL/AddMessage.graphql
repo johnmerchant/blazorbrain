@@ -1,0 +1,7 @@
+mutation AddMessage($conversationId: UUID!, $message: String!) {
+    addMessage(input: {conversationId: $conversationId, message: $message}) {
+        conversation {
+            ...ConversationFragment
+        }
+    }
+}

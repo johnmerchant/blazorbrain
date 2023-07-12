@@ -1,0 +1,5 @@
+subscription OnConversationUpdated($conversationId: UUID!) {
+    onConversationUpdated(conversationId: $conversationId) {
+        ...ConversationFragment
+    }
+}

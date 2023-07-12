@@ -1,0 +1,5 @@
+query GetConversation($conversationId: UUID!) {
+    conversation(conversationId: $conversationId) {
+        ...ConversationFragment
+    }
+}

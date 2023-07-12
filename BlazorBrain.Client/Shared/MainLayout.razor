@@ -1,0 +1,86 @@
+﻿@inherits LayoutComponentBase
+
+@inject NavigationManager Nav;
+@inject BlazorBrainClient Client;
+@inject IJSRuntime JS
+
+<div class="page">
+    <main class="container-fluid">
+        <div class="row flex-nowrap">
+            <nav class="d-flex flex-column flex-shrink-0 p-3 bg-light vh-100" style="width: 20rem">
+                <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+                    <Icon Name="IconName.Code" IconSize="IconSize.x2" Class="bi me-2"></Icon>
+                    <span class="fs-4">BlazorBrain</span>
+                </a>
+                <hr/>
+                <Button Color="Color.Primary" Clicked="CreateChat"><Icon Name="IconName.Add"/> New Chat</Button>
+                <hr/>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <UseGetConversations Context="result" Search="" Strategy="ExecutionStrategy.CacheAndNetwork">
+                        <LoadingContent>
+                            <li class="nav-item text-center">
+                                <Icon Name="IconName.Hourglass"></Icon> Loading...
+                            </li>
+                        </LoadingContent>
+                        <ChildContent>
+                            @if (result.Conversations?.Nodes is not null)
+                            {
+                                @foreach (var conversation in result.Conversations.Nodes)
+                                {
+                                    <li class="nav-item">
+                                        <a href="/Chat/@conversation.Id" class="nav-link @ChatIsActive(conversation.Id)">@conversation.Title</a>
+                                    </li>
+                                }
+                            }
+                        </ChildContent>
+                        <ErrorContent>
+                            <li class="nav-item">
+                                <Icon Name="IconName.ExclamationTriangle"></Icon>
+                                Something went wrong...
+                            </li>
+                        </ErrorContent>
+                    </UseGetConversations>
+                </ul>
+                <div class="top-row px-4 auth">
+                    <LoginDisplay/>
+                    <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+                </div>
+            </nav>
+            <article class="d-flex flex-column flex-fill p-3 bg-white">
+                @Body
+            </article>
+        </div>
+    </main>
+</div>
+
+@code {
+
+    protected bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await JS.InvokeVoidAsync("initBlazorBrainClient", DotNetObjectReference.Create(Client));
+    }
+
+    protected async Task CreateChat()
+    {
+        IsLoading = true;
+        var result = await Client.CreateConversation.ExecuteAsync();
+        if (result.Data?.CreateConversation.Conversation?.Id is not null)
+        {
+            Nav.NavigateTo($"/Chat/{result.Data.CreateConversation.Conversation.Id}");
+        }
+        else
+        {
+            IsLoading = false;
+        }
+    }
+
+    protected string ChatIsActive(Guid id) => new Uri(Nav.Uri).AbsolutePath == $"/Chat/{id}" ? "active" : "";
+
+    [JSInvokable]
+    public static async Task<string?> GetAzureMapsAuthToken(DotNetObjectReference<BlazorBrainClient> client)
+    {
+        return (await client.Value.MapsAccessToken.ExecuteAsync()).Data?.MapsAccessToken.String;
+    }
+}

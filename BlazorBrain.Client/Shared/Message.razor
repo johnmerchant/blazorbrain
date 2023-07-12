@@ -1,0 +1,101 @@
+@using System.Text
+@using Markdig
+@using Markdown.ColorCode
+
+@if (Role == ConversationRole.System)
+{
+    <Card TextAlignment="TextAlignment.Center" Margin="new FluentMargin().Is1.FromTop.FromBottom.Is2.FromStart.FromEnd" >
+        <CardBody>
+            <CardText>
+                <Badge Background="Background.Secondary">@Description</Badge>
+            </CardText>
+        </CardBody>
+    </Card>
+}
+else
+{
+    var (geometry, finalContent) = GeometryHelper.GetGeometry(Content);
+    <Card Margin="new FluentMargin().Is1.FromTop.FromBottom.Is2.FromStart.FromEnd">
+        <CardBody>
+            <CardText>
+                <em>
+                    <Icon Name="@GetIconName(Role)"></Icon>
+                    @Role:
+                </em>
+                @FormatMessage(finalContent)
+            </CardText>
+        </CardBody>
+    </Card>
+    @foreach (var json in geometry)
+    {
+        <Card Margin="new FluentMargin().Is1.FromTop.FromBottom.Is2.FromStart.FromEnd">
+            <CardBody>
+                <ConversationGeometryMap GeometryData="json"/>
+            </CardBody>
+        </Card>
+    }
+}
+
+@code {
+    
+    [Parameter]
+    public int Index { get; set; }
+
+    [Parameter]
+    public string Content { get; set; } = "";
+    
+    [Parameter]
+    public ConversationRole Role { get; set; }
+
+    [Parameter]
+    public string Description { get; set; } = "";
+    
+    [Parameter]
+    public int ConversationMessageCount { get; set; }
+    
+    [Parameter]
+    public bool IsStreaming { get; set; }
+
+    private MarkupString FormatMessage(string finalContent)
+    {
+        var codeBlockCount = Content?.Split("```").Length - 1;
+        var isCodeBlock = codeBlockCount % 2 == 1;
+        var markdown = new StringBuilder(finalContent);
+        if (!isCodeBlock && IsStreaming && Index == ConversationMessageCount - 1 && Role == ConversationRole.Bot)
+        {
+            markdown.Append("<span class=\"cursor\">&block;</span>");
+        }
+        try
+        {
+            return (MarkupString)Markdown.ToHtml(markdown.ToString(), MarkdownPipeline);
+        }
+        catch
+        {
+            return (MarkupString)Markdown.ToHtml(markdown.ToString(), SafeMarkdownPipeline);
+        }
+    }
+    
+    
+    private static readonly MarkdownPipeline MarkdownPipeline = 
+        new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .UseBootstrap()
+            .UseColorCode()
+            .Build();
+    
+    private static readonly MarkdownPipeline SafeMarkdownPipeline =
+        new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .UseBootstrap()
+            .Build();
+
+    private IconName GetIconName(ConversationRole role) => role switch 
+    {
+        ConversationRole.Bot => IconName.Code,
+        ConversationRole.User => IconName.User,
+        _ => IconName.QuestionCircle
+    };
+
+
+
+}

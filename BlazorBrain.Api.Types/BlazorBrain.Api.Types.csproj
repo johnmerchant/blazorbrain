@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="HotChocolate.Authorization" Version="13.3.1" />
+      <PackageReference Include="HotChocolate.Data" Version="13.3.1" />
+      <PackageReference Include="HotChocolate.Types" Version="13.3.1" />
+      <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\BlazorBrain.Application.Abstractions\BlazorBrain.Application.Abstractions.csproj" />
+      <ProjectReference Include="..\BlazorBrain.Infrastructure\BlazorBrain.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

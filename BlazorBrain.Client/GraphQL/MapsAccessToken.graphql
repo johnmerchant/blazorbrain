@@ -1,0 +1,5 @@
+mutation MapsAccessToken {
+    mapsAccessToken {
+        string
+    }
+}

@@ -1,0 +1,112 @@
+@using AzureMapsControl.Components.Map
+@using BlazorBrain.Client.GraphQL.State
+@using AzureMapsControl.Components.Atlas
+@using AzureMapsControl.Components.Data
+@using System.Text.Json
+@using AzureMapsControl.Components.Layers
+@using AzureMapsControl.Components.Popups
+@using ColorCode
+@using System.ComponentModel.DataAnnotations
+
+@inject IJSRuntime JS
+
+<Tabs SelectedTab="Map" ElementId="@(Id + "-Tabs")">
+    <Items>
+        <Tab Name="Map"><Icon Icon="@IconName.Map"></Icon> Map</Tab>
+        <Tab Name="Data"><Icon Icon="@IconName.Code"></Icon> Data</Tab>
+    </Items>
+    <Content>
+        <TabPanel Name="Map">
+            <AzureMap 
+                Id="@Id"
+                Class="map"
+                CameraOptions="new CameraOptions { }"
+                StyleOptions="new StyleOptions { }"
+                EventActivationFlags="MapEventActivationFlags.None().Enable(MapEventType.Ready, MapEventType.Click)"
+                OnReady="OnMapReadyAsync"
+            />
+        </TabPanel>
+        <TabPanel Name="Data">
+            <code>
+                @GetGeometryDataHtml()
+            </code>
+        </TabPanel>
+    </Content>
+</Tabs>
+
+@code {
+
+    [Parameter]
+    public string Id { get; init; } = $"map-{Guid.NewGuid():N}";
+    
+    [Parameter]
+    public JsonDocument GeometryData { get; set; }
+
+    private MarkupString GetGeometryDataHtml()
+    {
+        var json = JsonSerializer.Serialize(GeometryData, new JsonSerializerOptions { WriteIndented = true });
+        var formatter = new HtmlFormatter();
+        return (MarkupString)formatter.GetHtmlString(json, Languages.JavaScript);
+    }
+
+    private Popup? Popup { get; set; } 
+
+    private async Task OnMapReadyAsync(MapEventArgs mapEventArgs)
+    {
+        Popup = new Popup();
+        await mapEventArgs.Map.AddPopupAsync(Popup);
+        
+        var dataSourceId = "dataSourceId";
+        var dataSource = new DataSource(dataSourceId);
+        await mapEventArgs.Map.AddSourceAsync(dataSource);
+        var layer = new BubbleLayer
+        {
+            Options = new BubbleLayerOptions
+            {
+                Color = new ExpressionOrString("white"),
+                Radius = new ExpressionOrNumber(5),
+                StrokeColor = new ExpressionOrString("#4288f7"),
+                StrokeWidth = new ExpressionOrNumber(6),
+                Source = dataSourceId
+            }
+        };
+        layer.EventActivationFlags.Enable(LayerEventType.Click);
+        layer.OnClick += OnClick;
+        await mapEventArgs.Map.AddLayerAsync(layer, "");
+        await dataSource.AddAsync(GeometryData);
+    }
+
+    private async void OnClick(MapMouseEventArgs evt)
+    {
+        if (Popup is null) return;
+        
+        var markers = evt.Shapes
+            .Select(z => z.Properties)
+            .Concat(evt.Features.Select(z => z.Properties))
+            .ToArray();
+        
+        if (markers.Any())
+        {
+            var properties = markers.First();
+            var template = new PopupTemplate();
+
+            if (properties.TryGetValue("name", out var name))
+            {
+                template.Title = name?.ToString();
+            }
+
+            if (properties.TryGetValue("description", out var description))
+            {
+                var content = description?.ToString() ?? "";
+                template.Content = new (content);
+            }
+
+            await Popup.ApplyTemplateAsync(template, properties, z => z.Position = evt.Position);
+            await Popup.OpenAsync();
+        }
+        else
+        {
+            await Popup.CloseAsync();
+        }
+    }
+}
